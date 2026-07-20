@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur Achat vs Location (25 ans)</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #eff6ff;
+            --secondary: #0284c7;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+            --green: #15803d;
+            --green-bg: #dcfce7;
+            --red: #b91c1c;
+            --red-bg: #fee2e2;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin: 0 0 8px 0;
+            font-size: 28px;
+        }
+
+        p.subtitle {
+            color: #64748b;
+            margin: 0;
+            font-size: 15px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #475569;
+            flex: 1;
+            padding-right: 12px;
+        }
+
+        .form-group input[type="number"], .form-group select {
+            width: 130px;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .form-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .toggle-group {
+            background: var(--primary-light);
+            padding: 10px 14px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .toggle-group label {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: #f1f5f9;
+            color: #334155;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        th:first-child, td:first-child {
+            text-align: center;
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .badge-green {
+            background-color: var(--green-bg);
+            color: var(--green);
+        }
+
+        .badge-red {
+            background-color: var(--red-bg);
+            color: var(--red);
+        }
+
+        .summary-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #166534;
+        }
+
+        @media (max-width: 768px) {
+            .table-container {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Simulateur Financier : Achat vs Location sur 25 Ans</h1>
+        <p class="subtitle">Outil de comparaison dynamique et bilan patrimonial en cas de revente</p>
+    </header>
+
+    <div class="grid">
+        <!-- Partie Achat -->
+        <div class="card">
+            <h2>🏠 Option Achat</h2>
+            <div class="form-group">
+                <label for="credit">Mensualité crédit (assurance incluse)</label>
+                <div><input type="number" id="credit" value="1100" oninput="calculate()"> €/mois</div>
+            </div>
+            <div class="form-group">
+                <label for="charges">Charges de copropriété</label>
+                <div><input type="number" id="charges" value="1200" oninput="calculate()"> €/an</div>
+            </div>
+            <div class="form-group">
+                <label for="taxe">Taxe foncière</label>
+                <div><input type="number" id="taxe" value="1000" oninput="calculate()"> €/an</div>
+            </div>
+            <hr style="border:0; border-top:1px solid var(--border); margin: 15px 0;">
+            <div class="form-group">
+                <label for="prixVente">Prix de revente estimé du bien</label>
+                <div><input type="number" id="prixVente" value="250000" oninput="calculate()"> €</div>
+            </div>
+        </div>
+
+        <!-- Partie Location & Apport -->
+        <div class="card">
+            <h2>🔑 Option Location & Apport</h2>
+            <div class="form-group">
+                <label for="loyer">Loyer mensuel (charges comprises)</label>
+                <div><input type="number" id="loyer" value="850" oninput="calculate()"> €/mois</div>
+            </div>
+            
+            <hr style="border:0; border-top:1px solid var(--border); margin: 15px 0;">
+            
+            <div class="form-group">
+                <label for="apport">Montant de l'apport disponible</label>
+                <div><input type="number" id="apport" value="30000" oninput="calculate()"> €</div>
+            </div>
+
+            <div class="toggle-group">
+                <label for="useApport">Injecter l'apport dans l'achat ?</label>
+                <input type="checkbox" id="useApport" checked onchange="calculate()">
+            </div>
+            <p style="font-size: 12px; color: #64748b; margin: 0;">
+                <em>Si coché, l'apport est dépensé au départ pour l'achat. En location, cet apport est conservé comme épargne disponible.</em>
+            </p>
+        </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Année</th>
+                        <th>Cumul Dépenses Achat (€)</th>
+                        <th>Cumul Dépenses Location (€)</th>
+                        <th>Écart Trésorerie (€)</th>
+                        <th>Patrimoine Achat à la Revente (€)</th>
+                        <th>Patrimoine Locataire (€)</th>
+                        <th>Bilan Net Revente (Achat - Loc) (€)</th>
+                        <th>Verdict Rentabilité</th>
+                    </tr>
+                </thead>
+                <tbody id="resultBody">
+                    <!-- Généré dynamiquement en Javascript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function formatEuro(val) {
+    return Math.round(val).toLocaleString('fr-FR') + ' €';
+}
+
+function calculate() {
+    const credit = parseFloat(document.getElementById('credit').value) || 0;
+    const charges = parseFloat(document.getElementById('charges').value) || 0;
+    const taxe = parseFloat(document.getElementById('taxe').value) || 0;
+    const prixVente = parseFloat(document.getElementById('prixVente').value) || 0;
+    
+    const loyer = parseFloat(document.getElementById('loyer').value) || 0;
+    const apport = parseFloat(document.getElementById('apport').value) || 0;
+    const useApport = document.getElementById('useApport').checked;
+
+    const tbody = document.getElementById('resultBody');
+    tbody.innerHTML = '';
+
+    const achatAnnee = (credit * 12) + charges + taxe;
+    const locationAnnee = loyer * 12;
+
+    let cumulAchat = useApport ? apport : 0;
+    let cumulLocation = 0;
+
+    for (let annee = 1; annee <= 25; annee++) {
+        cumulAchat += achatAnnee;
+        cumulLocation += locationAnnee;
+
+        // Écart de trésorerie (combien a coûté l'achat par rapport à la location)
+        const ecartTresorerie = cumulAchat - cumulLocation;
+
+        // Patrimoine à la revente :
+        // Si acheteur revend : il récupère la valeur du bien MINUS les dépenses cumulées
+        // (Note: En simplifié, valeur net perçue = Prix de Vente - Dépenses Totales d'Achat)
+        const patrimoineAchatNet = prixVente - cumulAchat;
+
+        // Si locataire : son capital = (Apport conservé s'il n'a pas été injecté en achat) - Dépenses cumulées de loyer
+        const patrimoineLocataireNet = (useApport ? apport : 0) - cumulLocation;
+
+        // Gain net de l'acheteur VS le locataire en cas de revente à l'année N :
+        // Gain = Prix de Vente - Dépenses Achat - (Apport en épargne - Dépenses Location)
+        const gainNetRevente = prixVente - cumulAchat - (useApport ? apport : 0) + cumulLocation;
+
+        const estPlusRentableAcheter = gainNetRevente > 0;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>Année ${annee}</strong></td>
+            <td>${formatEuro(cumulAchat)}</td>
+            <td>${formatEuro(cumulLocation)}</td>
+            <td>${formatEuro(ecartTresorerie)}</td>
+            <td>${formatEuro(patrimoineAchatNet)}</td>
+            <td>${formatEuro(patrimoineLocataireNet)}</td>
+            <td style="font-weight: bold; color: ${gainNetRevente >= 0 ? '#15803d' : '#b91c1c'};">
+                ${gainNetRevente >= 0 ? '+' : ''}${formatEuro(gainNetRevente)}
+            </td>
+            <td>
+                <span class="badge ${estPlusRentableAcheter ? 'badge-green' : 'badge-red'}">
+                    ${estPlusRentableAcheter ? 'Acheter est + rentable' : 'Louer est + rentable'}
+                </span>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+// Initial calculation
+calculate();
+</script>
+
+</body>
+</html>
