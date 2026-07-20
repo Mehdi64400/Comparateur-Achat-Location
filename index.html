@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulateur Achat vs Location - Version Rectifiée</title>
+    <title>Simulateur Achat vs Location - Durée Crédit Variable</title>
     <style>
         :root {
             --primary: #0f172a;
@@ -183,6 +183,10 @@
 
         .badge-green { background-color: var(--green-bg); color: var(--green); }
         .badge-red { background-color: var(--red-bg); color: var(--red); }
+        
+        .credit-end-row {
+            background-color: #f0fdf4 !important;
+        }
     </style>
 </head>
 <body>
@@ -190,7 +194,7 @@
 <div class="container">
     <header>
         <h1>Simulateur Achat vs Location Réglé</h1>
-        <p class="subtitle">Modèle basé strictement sur vos formules de patrimoine net et d'effort d'épargne différentiel</p>
+        <p class="subtitle">Prise en compte de la durée du crédit et de l'arrêt des mensualités sur 25 ans</p>
     </header>
 
     <div class="grid">
@@ -202,6 +206,10 @@
                 <div><input type="number" id="capitalEmprunte" value="200000" oninput="calculate()"> €</div>
             </div>
             <div class="form-group">
+                <label for="dureeCredit">Durée du crédit</label>
+                <div><input type="number" id="dureeCredit" value="20" min="1" max="25" oninput="calculate()"> ans</div>
+            </div>
+            <div class="form-group">
                 <label for="tauxInteret">Taux d'intérêt annuel</label>
                 <div><input type="number" id="tauxInteret" value="3.5" step="0.1" oninput="calculate()"> %</div>
             </div>
@@ -210,7 +218,7 @@
                 <div><input type="number" id="tauxAssurance" value="0.3" step="0.05" oninput="calculate()"> %</div>
             </div>
             <div class="info-box">
-                <strong>Mensualité Crédit + Assur. :</strong> <span id="mensualiteCalculee">0 €</span> / mois
+                <strong>Mensualité Crédit (pendant l'emprunt) :</strong> <span id="mensualiteCalculee">0 €</span> / mois
             </div>
         </div>
 
@@ -279,6 +287,7 @@ function formatEuro(val) {
 
 function calculate() {
     const capitalInitial = parseFloat(document.getElementById('capitalEmprunte').value) || 0;
+    const dureeCreditAns = parseInt(document.getElementById('dureeCredit').value) || 20;
     const tauxInteretAnnuel = (parseFloat(document.getElementById('tauxInteret').value) || 0) / 100;
     const tauxAssuranceAnnuel = (parseFloat(document.getElementById('tauxAssurance').value) || 0) / 100;
     
@@ -291,13 +300,13 @@ function calculate() {
     const useApport = document.getElementById('useApport').checked;
 
     const tauxInteretMensuel = tauxInteretAnnuel / 12;
-    const nombreMois = 25 * 12;
+    const nombreMoisCredit = dureeCreditAns * 12;
     
     let mensualiteHorsAssurance = 0;
     if (tauxInteretMensuel > 0) {
-        mensualiteHorsAssurance = (capitalInitial * tauxInteretMensuel) / (1 - Math.pow(1 + tauxInteretMensuel, -nombreMois));
+        mensualiteHorsAssurance = (capitalInitial * tauxInteretMensuel) / (1 - Math.pow(1 + tauxInteretMensuel, -nombreMoisCredit));
     } else {
-        mensualiteHorsAssurance = capitalInitial / nombreMois;
+        mensualiteHorsAssurance = capitalInitial / nombreMoisCredit;
     }
     
     const mensualiteAssurance = (capitalInitial * tauxAssuranceAnnuel) / 12;
@@ -311,43 +320,64 @@ function calculate() {
     let restantDu = capitalInitial;
     let cumulEpargneLocataire = 0;
 
-    // Mensualité totale Acheteur (Crédit + Charges/12 + Taxe/12)
-    const mensualiteAchatGlobale = mensualiteCreditTotale + (chargesAn / 12) + (taxeAn / 12);
-    
-    // Économie mensuelle faite par le locataire
-    const epargneMensuelleLocataire = mensualiteAchatGlobale - loyerMensuel;
+    const chargesMensuelles = chargesAn / 12;
+    const taxeMensuelle = taxeAn / 12;
 
     for (let annee = 1; annee <= 25; annee++) {
-        // Amortissement du crédit sur les 12 mois de l'année
-        for (let m = 0; m < 12; m++) {
-            if (restantDu > 0) {
-                let interetMois = restantDu * tauxInteretMensuel;
-                let principalMois = mensualiteHorsAssurance - interetMois;
-                if (principalMois > restantDu) principalMois = restantDu;
-                restantDu -= principalMois;
+        let mensualiteAchatGlobaleCetteAnnee = 0;
+        
+        if (annee <= dureeCreditAns) {
+            // Pendant le crédit : crédit + assurance + charges + taxe
+            mensualiteAchatGlobaleCetteAnnee = mensualiteCreditTotale + chargesMensuelles + taxeMensuelle;
+            
+            // Amortissement classique du crédit
+            for (let m = 0; m < 12; m++) {
+                if (restantDu > 0) {
+                    let interetMois = restantDu * tauxInteretMensuel;
+                    let principalMois = mensualiteHorsAssurance - interetMois;
+                    if (principalMois > restantDu) principalMois = restantDu;
+                    restantDu -= principalMois;
+                }
             }
+        } else {
+            // Après la fin du crédit : plus de crédit ni d'assurance ! Juste charges + taxe
+            mensualiteAchatGlobaleCetteAnnee = chargesMensuelles + taxeMensuelle;
+            restantDu = 0;
         }
 
-        // Cumul de l'épargne générée par la différence de budget mensuel
+        // Économie mensuelle faite par le locataire (peut devenir négative si l'achat coûte moins cher !)
+        const epargneMensuelleLocataire = mensualiteAchatGlobaleCetteAnnee - loyerMensuel;
+        
+        // Cumul de l'épargne sur les 12 mois de l'année
         cumulEpargneLocataire += (epargneMensuelleLocataire * 12);
 
         // 1. Patrimoine Achat Net = Prix de revente futur - Capital restant dû
         const patrimoineAchatNet = prixVente - restantDu;
 
-        // 2. Patrimoine Locataire = Apport (si coché) + Différence cumulée entre dépenses achat et loyer
+        // 2. Patrimoine Locataire = Apport + Épargne cumulée
         const patrimoineLocataireNet = (useApport ? apport : 0) + cumulEpargneLocataire;
 
         // 3. Bilan Net = Patrimoine Achat Net - Patrimoine Locataire
         const bilanNetRevente = patrimoineAchatNet - patrimoineLocataireNet;
         const estPlusRentableAcheter = bilanNetRevente > 0;
 
+        const isCreditEndYear = (annee === dureeCreditAns);
+
         const tr = document.createElement('tr');
+        if (isCreditEndYear) {
+            tr.classList.add('credit-end-row');
+        }
+        
         tr.innerHTML = `
-            <td><strong>${annee}</strong></td>
-            <td style="color:#64748b;">${formatEuro(restantDu)}</td>
-            <td>${formatEuro(mensualiteAchatGlobale)}/m</td>
+            <td><strong>${annee}</strong>${isCreditEndYear ? ' 🏁' : ''}</td>
+            <td style="color:${restantDu === 0 ? '#16a34a' : '#64748b'}; font-weight: ${restantDu === 0 ? '600' : 'normal'};">
+                ${formatEuro(restantDu)}
+            </td>
+            <td>${formatEuro(mensualiteAchatGlobaleCetteAnnee)}/m</td>
             <td style="font-weight:600; color:#1e3a8a;">${formatEuro(patrimoineAchatNet)}</td>
-            <td style="color:#64748b;">${formatEuro(epargneMensuelleLocataire)}/m</td>
+            <td style="color:${epargneMensuelleLocataire < 0 ? '#b91c1c' : '#64748b'}; font-weight: ${epargneMensuelleLocataire < 0 ? '600' : 'normal'};">
+                ${formatEuro(epargneMensuelleLocataire)}/m
+            </td>
             <td style="font-weight:600; color:#0284c7;">${formatEuro(patrimoineLocataireNet)}</td>
             <td style="font-weight: bold; background-color: ${bilanNetRevente >= 0 ? 'var(--green-bg)' : 'var(--red-bg)'}; color: ${bilanNetRevente >= 0 ? 'var(--green)' : 'var(--red)'};">
                 ${bilanNetRevente >= 0 ? '+' : ''}${formatEuro(bilanNetRevente)}
