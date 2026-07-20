@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulateur Achat vs Location - Durée Crédit Variable</title>
+    <title>Simulateur Achat vs Location - Version Mensualités Détaillées</title>
     <style>
         :root {
             --primary: #0f172a;
@@ -237,6 +237,10 @@
                 <label for="prixVente">Prix de revente futur</label>
                 <div><input type="number" id="prixVente" value="250000" oninput="calculate()"> €</div>
             </div>
+            <div class="info-box" style="background: #f0fdf4; border-color: #bbf7d0; color: #166534;">
+                <div><strong>Charges :</strong> <span id="chargesMensuellesCalculees">0 €</span> / mois</div>
+                <div style="margin-top: 4px;"><strong>Taxe foncière :</strong> <span id="taxeMensuelleCalculee">0 €</span> / mois</div>
+            </div>
         </div>
 
         <!-- Location & Épargne -->
@@ -312,7 +316,13 @@ function calculate() {
     const mensualiteAssurance = (capitalInitial * tauxAssuranceAnnuel) / 12;
     const mensualiteCreditTotale = mensualiteHorsAssurance + mensualiteAssurance;
 
+    const chargesMensuelles = chargesAn / 12;
+    const taxeMensuelle = taxeAn / 12;
+
+    // Mise à jour des affichages informatifs dans les encarts
     document.getElementById('mensualiteCalculee').innerText = formatEuro(mensualiteCreditTotale);
+    document.getElementById('chargesMensuellesCalculees').innerText = formatEuro(chargesMensuelles);
+    document.getElementById('taxeMensuelleCalculee').innerText = formatEuro(taxeMensuelle);
 
     const tbody = document.getElementById('resultBody');
     tbody.innerHTML = '';
@@ -320,17 +330,12 @@ function calculate() {
     let restantDu = capitalInitial;
     let cumulEpargneLocataire = 0;
 
-    const chargesMensuelles = chargesAn / 12;
-    const taxeMensuelle = taxeAn / 12;
-
     for (let annee = 1; annee <= 25; annee++) {
         let mensualiteAchatGlobaleCetteAnnee = 0;
         
         if (annee <= dureeCreditAns) {
-            // Pendant le crédit : crédit + assurance + charges + taxe
             mensualiteAchatGlobaleCetteAnnee = mensualiteCreditTotale + chargesMensuelles + taxeMensuelle;
             
-            // Amortissement classique du crédit
             for (let m = 0; m < 12; m++) {
                 if (restantDu > 0) {
                     let interetMois = restantDu * tauxInteretMensuel;
@@ -340,24 +345,15 @@ function calculate() {
                 }
             }
         } else {
-            // Après la fin du crédit : plus de crédit ni d'assurance ! Juste charges + taxe
             mensualiteAchatGlobaleCetteAnnee = chargesMensuelles + taxeMensuelle;
             restantDu = 0;
         }
 
-        // Économie mensuelle faite par le locataire (peut devenir négative si l'achat coûte moins cher !)
         const epargneMensuelleLocataire = mensualiteAchatGlobaleCetteAnnee - loyerMensuel;
-        
-        // Cumul de l'épargne sur les 12 mois de l'année
         cumulEpargneLocataire += (epargneMensuelleLocataire * 12);
 
-        // 1. Patrimoine Achat Net = Prix de revente futur - Capital restant dû
         const patrimoineAchatNet = prixVente - restantDu;
-
-        // 2. Patrimoine Locataire = Apport + Épargne cumulée
         const patrimoineLocataireNet = (useApport ? apport : 0) + cumulEpargneLocataire;
-
-        // 3. Bilan Net = Patrimoine Achat Net - Patrimoine Locataire
         const bilanNetRevente = patrimoineAchatNet - patrimoineLocataireNet;
         const estPlusRentableAcheter = bilanNetRevente > 0;
 
