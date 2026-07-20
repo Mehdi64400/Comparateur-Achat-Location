@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur Achat vs Location Pro - Amortissement Réel</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --primary-light: #f1f5f9;
+            --accent: #2563eb;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #334155;
+            --border: #e2e8f0;
+            --green: #166534;
+            --green-bg: #dcfce7;
+            --red: #991b1b;
+            --red-bg: #fee2e2;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin: 0 0 8px 0;
+            font-size: 26px;
+            font-weight: 800;
+        }
+
+        p.subtitle {
+            color: #64748b;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .card h2 {
+            font-size: 16px;
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            flex: 1;
+        }
+
+        .form-group input {
+            width: 110px;
+            padding: 6px 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            text-align: right;
+        }
+
+        .form-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .toggle-group {
+            background: var(--primary-light);
+            padding: 10px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+        }
+
+        .toggle-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--primary);
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            font-size: 12px;
+        }
+
+        th, td {
+            padding: 10px 10px;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: #f8fafc;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        th:first-child, td:first-child {
+            text-align: center;
+            font-weight: bold;
+            background: #f1f5f9;
+            width: 60px;
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .badge-green { background-color: var(--green-bg); color: var(--green); }
+        .badge-red { background-color: var(--red-bg); color: var(--red); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Simulateur Achat vs Location avec Tableau d'Amortissement</h1>
+        <p class="subtitle">Calcul précis du capital restant dû et du bilan patrimonial à la revente (méthode Meilleurtaux)</p>
+    </header>
+
+    <div class="grid">
+        <!-- Financement Achat -->
+        <div class="card">
+            <h2>💰 1. Emprunt & Crédit</h2>
+            <div class="form-group">
+                <label for="capitalEmprunte">Montant emprunté</label>
+                <div><input type="number" id="capitalEmprunte" value="200000" oninput="calculate()"> €</div>
+            </div>
+            <div class="form-group">
+                <label for="tauxInteret">Taux d'intérêt nominal</label>
+                <div><input type="number" id="tauxInteret" value="3.5" step="0.1" oninput="calculate()"> %</div>
+            </div>
+            <div class="form-group">
+                <label for="tauxAssurance">Taux d'assurance (Nominal)</label>
+                <div><input type="number" id="tauxAssurance" value="0.35" step="0.05" oninput="calculate()"> %</div>
+            </div>
+            <div class="info-box">
+                <strong>Mensualité calculée :</strong> <span id="mensualiteCalculee">0 €</span>/mois<br>
+                <small>(Intérêts + Assurance inclus)</small>
+            </div>
+        </div>
+
+        <!-- Frais Achat & Revente -->
+        <div class="card">
+            <h2>🏠 2. Charges Achat & Vente</h2>
+            <div class="form-group">
+                <label for="charges">Charges copropriété / entretien</label>
+                <div><input type="number" id="charges" value="1200" oninput="calculate()"> €/an</div>
+            </div>
+            <div class="form-group">
+                <label for="taxe">Taxe foncière</label>
+                <div><input type="number" id="taxe" value="1100" oninput="calculate()"> €/an</div>
+            </div>
+            <div class="form-group">
+                <label for="prixVente">Prix de revente futur</label>
+                <div><input type="number" id="prixVente" value="260000" oninput="calculate()"> €</div>
+            </div>
+        </div>
+
+        <!-- Location & Apport -->
+        <div class="card">
+            <h2>🔑 3. Option Location & Capital</h2>
+            <div class="form-group">
+                <label for="loyer">Loyer mensuel CC</label>
+                <div><input type="number" id="loyer" value="900" oninput="calculate()"> €/mois</div>
+            </div>
+            <div class="form-group">
+                <label for="apport">Montant de l'apport</label>
+                <div><input type="number" id="apport" value="35000" oninput="calculate()"> €</div>
+            </div>
+            <div class="toggle-group">
+                <label for="useApport">Prendre en compte l'apport ?</label>
+                <input type="checkbox" id="useApport" checked onchange="calculate()">
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Année</th>
+                        <th>Capital Restant Dû (€)</th>
+                        <th>Cumul Dépenses Achat (€)</th>
+                        <th>Patrimoine Achat Net (€)</th>
+                        <th>Cumul Dépenses Loc. (€)</th>
+                        <th>Patrimoine Locataire (€)</th>
+                        <th>Bilan Net Revente (€)</th>
+                        <th>Verdict Rentabilité</th>
+                    </tr>
+                </thead>
+                <tbody id="resultBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function formatEuro(val) {
+    return Math.round(val).toLocaleString('fr-FR') + ' €';
+}
+
+function calculate() {
+    const capitalInitial = parseFloat(document.getElementById('capitalEmprunte').value) || 0;
+    const tauxInteretAnnuel = (parseFloat(document.getElementById('tauxInteret').value) || 0) / 100;
+    const tauxAssuranceAnnuel = (parseFloat(document.getElementById('tauxAssurance').value) || 0) / 100;
+    
+    const chargesAn = parseFloat(document.getElementById('charges').value) || 0;
+    const taxeAn = parseFloat(document.getElementById('taxe').value) || 0;
+    const prixVente = parseFloat(document.getElementById('prixVente').value) || 0;
+    
+    const loyerMensuel = parseFloat(document.getElementById('loyer').value) || 0;
+    const apport = parseFloat(document.getElementById('apport').value) || 0;
+    const useApport = document.getElementById('useApport').checked;
+
+    // Calcul de la mensualité du crédit (hors assurance) selon la formule standard
+    const tauxInteretMensuel = tauxInteretAnnuel / 12;
+    const nombreMois = 25 * 12;
+    
+    let mensualiteHorsAssurance = 0;
+    if (tauxInteretMensuel > 0) {
+        mensualiteHorsAssurance = (capitalInitial * tauxInteretMensuel) / (1 - Math.pow(1 + tauxInteretMensuel, -nombreMois));
+    } else {
+        mensualiteHorsAssurance = capitalInitial / nombreMois;
+    }
+    
+    // Assurance mensuelle (basée sur le capital initial, méthode standard la plus fréquente)
+    const mensualiteAssurance = (capitalInitial * tauxAssuranceAnnuel) / 12;
+    const mensualiteTotale = mensualiteHorsAssurance + mensualiteAssurance;
+
+    document.getElementById('mensualiteCalculee').innerText = formatEuro(mensualiteTotale);
+
+    const tbody = document.getElementById('resultBody');
+    tbody.innerHTML = '';
+
+    let restantDu = capitalInitial;
+    let cumulDepensesAchat = useApport ? apport : 0;
+    let cumulDepensesLocation = 0;
+
+    for (let annee = 1; annee <= 25; annee++) {
+        // Amortissement mois par mois pour l'année en cours
+        let interetsAnnules = 0;
+        let principalAmortiAnnuel = 0;
+        
+        for (let m = 0; m < 12; m++) {
+            if (restantDu > 0) {
+                let interetMois = restantDu * tauxInteretMensuel;
+                let principalMois = mensualiteHorsAssurance - interetMois;
+                if (principalMois > restantDu) principalMois = restantDu;
+                
+                interetsAnnules += interetMois;
+                principalAmortiAnnuel += principalMois;
+                restantDu -= principalMois;
+            }
+        }
+
+        // Dépenses de l'année
+        const depensesAchatCetteAnnee = (mensualiteTotale * 12) + chargesAn + taxeAn;
+        cumulDepensesAchat += depensesAchatCetteAnnee;
+        
+        const depensesLocCetteAnnee = loyerMensuel * 12;
+        cumulDepensesLocation += depensesLocCetteAnnee;
+
+        // Patrimoine Réel de l'Acheteur en cas de revente :
+        // Il vend à "prixVente", rembourse le "restantDu" à la banque, et on déduit tout le cash déjà injecté
+        const patrimoineAchatNet = prixVente - restantDu - cumulDepensesAchat;
+
+        // Patrimoine du Locataire :
+        // Il a toujours son apport initial (s'il est activé) et on déduit ses loyers cumulés
+        const patrimoineLocataireNet = (useApport ? apport : 0) - cumulDepensesLocation;
+
+        // Bilan Net de la revente (Avantage Achat par rapport à la Location)
+        const bilanNetRevente = patrimoineAchatNet - patrimoineLocataireNet;
+        const estPlusRentableAcheter = bilanNetRevente > 0;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${annee}</strong></td>
+            <td style="color:#64748b;">${formatEuro(restantDu)}</td>
+            <td>${formatEuro(cumulDepensesAchat)}</td>
+            <td style="font-weight:500;">${formatEuro(patrimoineAchatNet)}</td>
+            <td>${formatEuro(cumulDepensesLocation)}</td>
+            <td>${formatEuro(patrimoineLocataireNet)}</td>
+            <td style="font-weight: bold; color: ${bilanNetRevente >= 0 ? 'var(--green)' : 'var(--red)'};">
+                ${bilanNetRevente >= 0 ? '+' : ''}${formatEuro(bilanNetRevente)}
+            </td>
+            <td>
+                <span class="badge ${estPlusRentableAcheter ? 'badge-green' : 'badge-red'}">
+                    ${estPlusRentableAcheter ? 'Achat 🟢' : 'Louer 🔴'}
+                </span>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+// Premier calcul au chargement
+calculate();
+</script>
+
+</body>
+</html>
