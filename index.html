@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulateur Achat vs Location Pro - Amortissement Réel</title>
+    <title>Simulateur Achat vs Location - Version Rectifiée</title>
     <style>
         :root {
             --primary: #0f172a;
@@ -77,9 +77,6 @@
             color: var(--primary);
             border-bottom: 2px solid var(--primary-light);
             padding-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .form-group {
@@ -154,7 +151,7 @@
         }
 
         th, td {
-            padding: 10px 10px;
+            padding: 12px 10px;
             text-align: right;
             border-bottom: 1px solid var(--border);
         }
@@ -178,7 +175,7 @@
 
         .badge {
             display: inline-block;
-            padding: 3px 6px;
+            padding: 4px 8px;
             border-radius: 4px;
             font-weight: 600;
             font-size: 11px;
@@ -192,59 +189,58 @@
 
 <div class="container">
     <header>
-        <h1>Simulateur Achat vs Location avec Tableau d'Amortissement</h1>
-        <p class="subtitle">Calcul précis du capital restant dû et du bilan patrimonial à la revente (méthode Meilleurtaux)</p>
+        <h1>Simulateur Achat vs Location Réglé</h1>
+        <p class="subtitle">Modèle basé strictement sur vos formules de patrimoine net et d'effort d'épargne différentiel</p>
     </header>
 
     <div class="grid">
         <!-- Financement Achat -->
         <div class="card">
-            <h2>💰 1. Emprunt & Crédit</h2>
+            <h2>💰 1. Financement & Crédit</h2>
             <div class="form-group">
                 <label for="capitalEmprunte">Montant emprunté</label>
                 <div><input type="number" id="capitalEmprunte" value="200000" oninput="calculate()"> €</div>
             </div>
             <div class="form-group">
-                <label for="tauxInteret">Taux d'intérêt nominal</label>
+                <label for="tauxInteret">Taux d'intérêt annuel</label>
                 <div><input type="number" id="tauxInteret" value="3.5" step="0.1" oninput="calculate()"> %</div>
             </div>
             <div class="form-group">
-                <label for="tauxAssurance">Taux d'assurance (Nominal)</label>
-                <div><input type="number" id="tauxAssurance" value="0.35" step="0.05" oninput="calculate()"> %</div>
+                <label for="tauxAssurance">Taux d'assurance annuel</label>
+                <div><input type="number" id="tauxAssurance" value="0.3" step="0.05" oninput="calculate()"> %</div>
             </div>
             <div class="info-box">
-                <strong>Mensualité calculée :</strong> <span id="mensualiteCalculee">0 €</span>/mois<br>
-                <small>(Intérêts + Assurance inclus)</small>
+                <strong>Mensualité Crédit + Assur. :</strong> <span id="mensualiteCalculee">0 €</span> / mois
             </div>
         </div>
 
-        <!-- Frais Achat & Revente -->
+        <!-- Frais de l'Achat -->
         <div class="card">
-            <h2>🏠 2. Charges Achat & Vente</h2>
+            <h2>🏠 2. Charges de l'Achat</h2>
             <div class="form-group">
-                <label for="charges">Charges copropriété / entretien</label>
+                <label for="charges">Charges de copropriété</label>
                 <div><input type="number" id="charges" value="1200" oninput="calculate()"> €/an</div>
             </div>
             <div class="form-group">
                 <label for="taxe">Taxe foncière</label>
-                <div><input type="number" id="taxe" value="1100" oninput="calculate()"> €/an</div>
+                <div><input type="number" id="taxe" value="1000" oninput="calculate()"> €/an</div>
             </div>
             <div class="form-group">
                 <label for="prixVente">Prix de revente futur</label>
-                <div><input type="number" id="prixVente" value="260000" oninput="calculate()"> €</div>
+                <div><input type="number" id="prixVente" value="250000" oninput="calculate()"> €</div>
             </div>
         </div>
 
-        <!-- Location & Apport -->
+        <!-- Location & Épargne -->
         <div class="card">
-            <h2>🔑 3. Option Location & Capital</h2>
+            <h2>🔑 3. Option Location & Apport</h2>
             <div class="form-group">
                 <label for="loyer">Loyer mensuel CC</label>
-                <div><input type="number" id="loyer" value="900" oninput="calculate()"> €/mois</div>
+                <div><input type="number" id="loyer" value="850" oninput="calculate()"> €/mois</div>
             </div>
             <div class="form-group">
                 <label for="apport">Montant de l'apport</label>
-                <div><input type="number" id="apport" value="35000" oninput="calculate()"> €</div>
+                <div><input type="number" id="apport" value="30000" oninput="calculate()"> €</div>
             </div>
             <div class="toggle-group">
                 <label for="useApport">Prendre en compte l'apport ?</label>
@@ -261,9 +257,9 @@
                     <tr>
                         <th>Année</th>
                         <th>Capital Restant Dû (€)</th>
-                        <th>Cumul Dépenses Achat (€)</th>
+                        <th>Mensualité Globale Achat (€/m)</th>
                         <th>Patrimoine Achat Net (€)</th>
-                        <th>Cumul Dépenses Loc. (€)</th>
+                        <th>Épargne Mensuelle Loc. (€/m)</th>
                         <th>Patrimoine Locataire (€)</th>
                         <th>Bilan Net Revente (€)</th>
                         <th>Verdict Rentabilité</th>
@@ -294,7 +290,6 @@ function calculate() {
     const apport = parseFloat(document.getElementById('apport').value) || 0;
     const useApport = document.getElementById('useApport').checked;
 
-    // Calcul de la mensualité du crédit (hors assurance) selon la formule standard
     const tauxInteretMensuel = tauxInteretAnnuel / 12;
     const nombreMois = 25 * 12;
     
@@ -305,52 +300,44 @@ function calculate() {
         mensualiteHorsAssurance = capitalInitial / nombreMois;
     }
     
-    // Assurance mensuelle (basée sur le capital initial, méthode standard la plus fréquente)
     const mensualiteAssurance = (capitalInitial * tauxAssuranceAnnuel) / 12;
-    const mensualiteTotale = mensualiteHorsAssurance + mensualiteAssurance;
+    const mensualiteCreditTotale = mensualiteHorsAssurance + mensualiteAssurance;
 
-    document.getElementById('mensualiteCalculee').innerText = formatEuro(mensualiteTotale);
+    document.getElementById('mensualiteCalculee').innerText = formatEuro(mensualiteCreditTotale);
 
     const tbody = document.getElementById('resultBody');
     tbody.innerHTML = '';
 
     let restantDu = capitalInitial;
-    let cumulDepensesAchat = useApport ? apport : 0;
-    let cumulDepensesLocation = 0;
+    let cumulEpargneLocataire = 0;
+
+    // Mensualité totale Acheteur (Crédit + Charges/12 + Taxe/12)
+    const mensualiteAchatGlobale = mensualiteCreditTotale + (chargesAn / 12) + (taxeAn / 12);
+    
+    // Économie mensuelle faite par le locataire
+    const epargneMensuelleLocataire = mensualiteAchatGlobale - loyerMensuel;
 
     for (let annee = 1; annee <= 25; annee++) {
-        // Amortissement mois par mois pour l'année en cours
-        let interetsAnnules = 0;
-        let principalAmortiAnnuel = 0;
-        
+        // Amortissement du crédit sur les 12 mois de l'année
         for (let m = 0; m < 12; m++) {
             if (restantDu > 0) {
                 let interetMois = restantDu * tauxInteretMensuel;
                 let principalMois = mensualiteHorsAssurance - interetMois;
                 if (principalMois > restantDu) principalMois = restantDu;
-                
-                interetsAnnules += interetMois;
-                principalAmortiAnnuel += principalMois;
                 restantDu -= principalMois;
             }
         }
 
-        // Dépenses de l'année
-        const depensesAchatCetteAnnee = (mensualiteTotale * 12) + chargesAn + taxeAn;
-        cumulDepensesAchat += depensesAchatCetteAnnee;
-        
-        const depensesLocCetteAnnee = loyerMensuel * 12;
-        cumulDepensesLocation += depensesLocCetteAnnee;
+        // Cumul de l'épargne générée par la différence de budget mensuel
+        cumulEpargneLocataire += (epargneMensuelleLocataire * 12);
 
-        // Patrimoine Réel de l'Acheteur en cas de revente :
-        // Il vend à "prixVente", rembourse le "restantDu" à la banque, et on déduit tout le cash déjà injecté
-        const patrimoineAchatNet = prixVente - restantDu - cumulDepensesAchat;
+        // 1. Patrimoine Achat Net = Prix de revente futur - Capital restant dû
+        const patrimoineAchatNet = prixVente - restantDu;
 
-        // Patrimoine du Locataire :
-        // Il a toujours son apport initial (s'il est activé) et on déduit ses loyers cumulés
-        const patrimoineLocataireNet = (useApport ? apport : 0) - cumulDepensesLocation;
+        // 2. Patrimoine Locataire = Apport (si coché) + Différence cumulée entre dépenses achat et loyer
+        const patrimoineLocataireNet = (useApport ? apport : 0) + cumulEpargneLocataire;
 
-        // Bilan Net de la revente (Avantage Achat par rapport à la Location)
+        // 3. Bilan Net = Patrimoine Achat Net - Patrimoine Locataire
         const bilanNetRevente = patrimoineAchatNet - patrimoineLocataireNet;
         const estPlusRentableAcheter = bilanNetRevente > 0;
 
@@ -358,16 +345,16 @@ function calculate() {
         tr.innerHTML = `
             <td><strong>${annee}</strong></td>
             <td style="color:#64748b;">${formatEuro(restantDu)}</td>
-            <td>${formatEuro(cumulDepensesAchat)}</td>
-            <td style="font-weight:500;">${formatEuro(patrimoineAchatNet)}</td>
-            <td>${formatEuro(cumulDepensesLocation)}</td>
-            <td>${formatEuro(patrimoineLocataireNet)}</td>
-            <td style="font-weight: bold; color: ${bilanNetRevente >= 0 ? 'var(--green)' : 'var(--red)'};">
+            <td>${formatEuro(mensualiteAchatGlobale)}/m</td>
+            <td style="font-weight:600; color:#1e3a8a;">${formatEuro(patrimoineAchatNet)}</td>
+            <td style="color:#64748b;">${formatEuro(epargneMensuelleLocataire)}/m</td>
+            <td style="font-weight:600; color:#0284c7;">${formatEuro(patrimoineLocataireNet)}</td>
+            <td style="font-weight: bold; background-color: ${bilanNetRevente >= 0 ? 'var(--green-bg)' : 'var(--red-bg)'}; color: ${bilanNetRevente >= 0 ? 'var(--green)' : 'var(--red)'};">
                 ${bilanNetRevente >= 0 ? '+' : ''}${formatEuro(bilanNetRevente)}
             </td>
             <td>
                 <span class="badge ${estPlusRentableAcheter ? 'badge-green' : 'badge-red'}">
-                    ${estPlusRentableAcheter ? 'Achat 🟢' : 'Louer 🔴'}
+                    ${estPlusRentableAcheter ? 'Achat Gagnant 🟢' : 'Location Gagnante 🔴'}
                 </span>
             </td>
         `;
@@ -375,7 +362,6 @@ function calculate() {
     }
 }
 
-// Premier calcul au chargement
 calculate();
 </script>
 
